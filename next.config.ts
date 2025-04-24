@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
     //     port = "",
     //   },
     // ],
-    domains: ["a0.muscache.com"],
+    domains: ["a0.muscache.com", "lh3.googleusercontent.com"],
   },
 };
 
