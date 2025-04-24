@@ -28,8 +28,7 @@ const MapFilterItems = () => {
   );
 
   return (
-      <div className="flex gap-x-10 w-full mt-5 overflow-x-scroll scrollbar-hidden">
-          
+    <div className="flex gap-x-10 w-full mt-5 overflow-x-auto scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent">
       {/* Clear filter button */}
       <Link href={pathName} className="flex flex-col items-center gap-y-1">
         <div
