@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function Login() {
   return (
@@ -35,12 +36,12 @@ export default function Login() {
               placeholder="Enter your password"
             />
           </div>
-          <button
+          <Button
             type="submit"
-            className="w-full bg-rose-600 text-white py-2 px-4 rounded-md hover:bg-rose-700 transition-colors"
+            className="w-full text-white py-2 px-4 rounded-md hover:bg-rose-700 transition-colors"
           >
             Login
-          </button>
+          </Button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-600">
           Don&apos;t have an account?{" "}

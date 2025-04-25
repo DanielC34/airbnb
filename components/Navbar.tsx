@@ -2,8 +2,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import React from 'react'
-import DesktopLogo from '@/public/airbnb-desktop.png'
-import MobileLogo from '@/public/airbnb-mobile.png'
+import DesktopLogo from '@/public/Lodgify-logo.png'
+import MobileLogo from '@/public/Lodgify-mobile.png'
 import UserNav from './UserNav'
 
 const Navbar = () => {
@@ -14,7 +14,7 @@ const Navbar = () => {
           <Image
             src={DesktopLogo}
             alt="Desktop Logo airbnb"
-            className="w-32 hidden lg:block"
+            className="w-25 hidden lg:block h-12"
           />
           <Image src={MobileLogo} alt="Mobile Logo airbnb" className="block lg:hidden w-12" />
               </Link>
