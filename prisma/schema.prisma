@@ -4,21 +4,78 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-generator client {
-  provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+generator client {
+  provider = "prisma-client-js"
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String?
-  email     String?  @unique
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  email   String   @unique
+  name    String?
+  emailVerified DateTime?
+  image String?
+  hashedPassword String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  favoriteIds String[] @db.ObjectId
+
+  accounts Account[]
+  listings Listing[]
+  reservations Reservation[]
+}
+
+model Account {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId   String   @db.ObjectId
+  provider String
+  providerAccountId String
+  type     String
+  refreshToken String? @db.String
+  accessToken String? @db.String
+  expiresAt Int?
+  tokenType String?
+  scope     String?
+  idToken   String? @db.String
+  sessionState String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade) //creates relation with user using userId and references id field in User model
+
+  @@unique([provider, providerAccountId])
+}
+
+
+model Listing {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  title String
+  description String
+  imageSrc String
+  userId String @db.ObjectId
+  category String
+  roomCountr Int
+  guestCount Int
+  bathroomCount Int
+  locationValue String
+  price Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) //creates relation with user using userId and references id field in User model
+  reservations Reservation[]
+}
+
+model Reservation {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  listingId String @db.ObjectId
+  userId String @db.ObjectId
+  startDate DateTime
+  endDate DateTime
+  totalPrice Int
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade) //creates relation with listing using listingId and references id field in Listing model
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) //creates relation with user using userId and references id field in User model
+  @@index([listingId], name: "listingId_index")
 }
