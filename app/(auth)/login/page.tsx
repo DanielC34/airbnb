@@ -56,7 +56,7 @@ export default function LoginModal({
   const onSubmit = async (data: LoginFormValues) => {
     try {
       // Show loading toast while processing
-      toast.loading("Logging you in...");
+      const loadingToast = toast.loading("Logging in...");
 
       // Try to log in using NextAuth
       const result = await signIn("credentials", {
@@ -66,11 +66,11 @@ export default function LoginModal({
       });
 
       // Dismiss loading toast
-      toast.dismiss();
+      toast.dismiss(loadingToast);
 
       // If something went wrong
       if (result?.error) {
-        toast.error("Invalid email or password");
+        toast.error("Invalid credentials. Please try again.");
         return;
       }
 
@@ -83,11 +83,10 @@ export default function LoginModal({
       // await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Successful login toast
-      toast.success("Welcome Back!!");
-      // console.log("Form data:", data); // Replace with your login logic
+      toast.success("Logged in successfully!");
+      router.refresh();
       form.reset();
       onClose();
-      router.refresh(); // Refresh the page to update UI with new session
     } catch (error) {
       // Error toast
       toast.error("Something went wrong");

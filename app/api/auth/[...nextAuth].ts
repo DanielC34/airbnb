@@ -44,24 +44,20 @@ export const authOptions: AuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // Validate credentials presence
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Invalid credentials");
         }
 
-        // Find user by email
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email,
           },
         });
 
-        // Verify user exists and has password set
         if (!user || !user.hashedPassword) {
           throw new Error("Invalid credentials");
         }
 
-        // Verify password match
         const isCorrectPassword = await bcrypt.compare(
           credentials.password,
           user.hashedPassword
@@ -75,13 +71,12 @@ export const authOptions: AuthOptions = {
       },
     }),
   ],
-  // Custom pages configuration
   pages: {
-    signIn: "/", // Use home page for sign in modal
+    signIn: "/",
   },
   debug: process.env.NODE_ENV === "development",
   session: {
-    strategy: "jwt", // Use JWT for session handling
+    strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
