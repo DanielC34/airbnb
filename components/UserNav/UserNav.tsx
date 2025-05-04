@@ -10,13 +10,15 @@ import {
 import { MenuIcon } from "lucide-react";
 import Image from "next/image";
 import DefaultAvatar from "@/public/user.png";
-import LoginModal from "@/app/(auth)/login/page";
-import RegisterModal from "@/app/(auth)/signup/page";
+import LoginModal from "@/components/modal/LoginModal";
+import RegisterModal from "@/components/modal/RegisterModal";
+import { useSession, signOut } from "next-auth/react";
 
 export default function UserNav() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const isAuthenticated = false;
+  // Get info about who's logged in
+  const { data: session } = useSession();
 
   return (
     <>
@@ -35,10 +37,21 @@ export default function UserNav() {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent className="w-[200px]" align="end">
-          {isAuthenticated ? (
-            <DropdownMenuItem>
-              <button className="w-full text-left">Logout</button>
-            </DropdownMenuItem>
+          {session ? (
+            // Show these when logged in
+            <>
+              <DropdownMenuItem>
+                <button className="w-full text-left">My Trips</button>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <button className="w-full text-left">My Favorites</button>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <button onClick={() => signOut()} className="w-full text-left">
+                  Logout
+                </button>
+              </DropdownMenuItem>
+            </>
           ) : (
             <>
               <DropdownMenuItem onSelect={() => setIsRegisterModalOpen(true)}>

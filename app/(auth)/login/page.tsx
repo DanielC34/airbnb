@@ -18,8 +18,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { signIn } from "next-auth/react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import GoogleSignInButton from "@/components/GoogleSignInButton/GoogleSignInButton";
 import GithubSignInButton from "@/components/GithubSignInButton/GithubSignInButton";
 
@@ -34,6 +36,8 @@ export default function LoginModal({
   onClose,
   onRegisterClick,
 }: LoginModalProps) {
+  const router = useRouter(); // Initialize the router for navigation
+  // Initialize the form using react-hook-form and zod for validation
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -48,22 +52,45 @@ export default function LoginModal({
     onClose(); //Close the modal
   };
 
+  //When someone tries to login
   const onSubmit = async (data: LoginFormValues) => {
     try {
       // Show loading toast while processing
-      toast.loading("Logging you in...");
+      const loadingToast = toast.loading("Logging in...");
 
-      // Simulate API call (replace with your actual login logic)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Try to log in using NextAuth
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false, //Prevent automatic redirect
+      });
 
-      // Success toast
-      toast.success("Successfully logged in!");
-      console.log("Form data:", data); // Replace with your login logic
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+
+      // If something went wrong
+      if (result?.error) {
+        toast.error("Invalid credentials. Please try again.");
+        return;
+      }
+
+      // If login worked!
+      // toast.success("Welcome back!");
+      // form.reset();
+      // onClose();
+
+      // // Simulate API call (replace with your actual login logic)
+      // await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Successful login toast
+      toast.success("Logged in successfully!");
+      router.refresh();
       form.reset();
       onClose();
     } catch (error) {
       // Error toast
-      toast.error(error instanceof Error ? error.message : "Failed to login");
+      toast.error("Something went wrong");
+      console.error("Login error:", error);
     }
   };
 

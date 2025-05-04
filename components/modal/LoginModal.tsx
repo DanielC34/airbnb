@@ -2,10 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  registerSchema,
-  type RegisterFormValues,
-} from "@/lib/validations/auth";
+import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
 import {
   Dialog,
   DialogContent,
@@ -21,112 +18,76 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { signIn } from "next-auth/react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import GoogleSignInButton from "@/components/GoogleSignInButton/GoogleSignInButton";
 import GithubSignInButton from "@/components/GithubSignInButton/GithubSignInButton";
 
-interface RegisterModalProps {
+interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoginClick: () => void;
+  onRegisterClick: () => void;
 }
 
-export default function RegisterModal({
+export default function LoginModal({
   isOpen,
   onClose,
-  onLoginClick,
-}: RegisterModalProps) {
-  const form = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+  onRegisterClick,
+}: LoginModalProps) {
+  // No longer need router since we're using window.location.href
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
-      fullName: "",
       email: "",
       password: "",
     },
   });
 
-  // Add this function to handle modal closing
   const handleClose = () => {
-    form.reset(); //Reset the form
-    onClose(); //Close the modal
-  };
-
-const onSubmit = async (data: RegisterFormValues) => {
-  try {
-    toast.loading("Creating your account...");
-
-    // Log what we're sending
-    console.log("Sending data:", {
-      fullName: data.fullName, // Make sure this matches your schema
-      email: data.email,
-      password: data.password,
-    });
-
-    // Debug log
-    console.log("Form data:", data);
-
-    const response = await fetch("/api/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: data.fullName, // Changed from 'name' to 'fullName'
-        email: data.email,
-        password: data.password,
-      }),
-    });
-
-    // Debug log
-    console.log("Response status:", response.status);
-
-    const responseData = await response.json();
-
-    // Debug log
-    console.log("Response data:", responseData);
-
-    if (!response.ok) {
-      throw new Error(responseData.error || "Something went wrong!");
-    }
-
-    //Success flow
-    toast.success("Account created successfully!");
     form.reset();
     onClose();
-    // Optionally redirect to login
-    onLoginClick();
-  } catch (error) {
-    toast.error(
-      error instanceof Error ? error.message : "Something went wrong"
-    );
-    console.error("Registration error:", error);
-  }
-};
+  };
+
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      toast.loading("Logging you in...");
+
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+
+      toast.dismiss();
+
+      if (result?.error) {
+        toast.error("Invalid email or password");
+        return;
+      }
+
+      toast.success("Welcome Back!");
+      form.reset();
+      onClose();
+      
+      // Force a hard refresh to ensure session is updated
+      window.location.href = "/";
+    } catch (error) {
+      toast.error("Something went wrong");
+      console.error("Login error:", error);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-center">
           <DialogTitle className="text-xl font-semibold">
-            Create an account
+            Login to your account
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <FormField
               control={form.control}
               name="email"
@@ -166,7 +127,7 @@ const onSubmit = async (data: RegisterFormValues) => {
               className="w-full bg-rose-600 hover:bg-rose-700"
               disabled={form.formState.isSubmitting}
             >
-              {form.formState.isSubmitting ? "Creating account..." : "Continue"}
+              {form.formState.isSubmitting ? "Logging in..." : "Continue"}
             </Button>
           </form>
         </Form>
@@ -181,21 +142,19 @@ const onSubmit = async (data: RegisterFormValues) => {
             </span>
           </div>
         </div>
-
         <GoogleSignInButton />
         <GithubSignInButton />
-
         <div className="mt-4 text-center text-sm text-gray-500">
-          Already have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Button
             onClick={() => {
               onClose();
-              onLoginClick();
+              onRegisterClick();
             }}
             variant="link"
             className="text-rose-600 hover:text-rose-700 p-0"
           >
-            Log in
+            Register here
           </Button>
         </div>
       </DialogContent>

@@ -1,4 +1,4 @@
-import NextAuth, { AuthOptions } from "next-auth";
+import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import GithubProvider from "next-auth/providers/github";
@@ -6,37 +6,25 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import prisma from "@/app/libs/prismaDB";
 
-// Main authentication configuration
 export const authOptions: AuthOptions = {
-  // Use Prisma adapter for database integration
   adapter: PrismaAdapter(prisma),
   providers: [
-    // OAuth providers
-    GoogleProvider({
-      clientId:
-        process.env.GOOGLE_CLIENT_ID ||
-        (() => {
-          throw new Error("GOOGLE_CLIENT_ID is not defined");
-        })(),
-      clientSecret:
-        process.env.GOOGLE_CLIENT_SECRET ||
-        (() => {
-          throw new Error("GOOGLE_CLIENT_SECRET is not defined");
-        })(),
-    }),
-    GithubProvider({
-      clientId:
-        process.env.GITHUB_ID ||
-        (() => {
-          throw new Error("GITHUB_ID is not defined");
-        })(),
-      clientSecret:
-        process.env.GITHUB_SECRET ||
-        (() => {
-          throw new Error("GITHUB_SECRET is not defined");
-        })(),
-    }),
-    // Email & Password authentication
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
+    ...(process.env.GITHUB_ID && process.env.GITHUB_SECRET
+      ? [
+          GithubProvider({
+            clientId: process.env.GITHUB_ID,
+            clientSecret: process.env.GITHUB_SECRET,
+          }),
+        ]
+      : []),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -74,12 +62,9 @@ export const authOptions: AuthOptions = {
   pages: {
     signIn: "/",
   },
-  debug: process.env.NODE_ENV === "development",
   session: {
     strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
 };
-
-// Initialize NextAuth with config
-export default NextAuth(authOptions);

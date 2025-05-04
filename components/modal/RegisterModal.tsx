@@ -46,63 +46,43 @@ export default function RegisterModal({
     },
   });
 
-  // Add this function to handle modal closing
   const handleClose = () => {
-    form.reset(); //Reset the form
-    onClose(); //Close the modal
-  };
-
-const onSubmit = async (data: RegisterFormValues) => {
-  try {
-    toast.loading("Creating your account...");
-
-    // Log what we're sending
-    console.log("Sending data:", {
-      fullName: data.fullName, // Make sure this matches your schema
-      email: data.email,
-      password: data.password,
-    });
-
-    // Debug log
-    console.log("Form data:", data);
-
-    const response = await fetch("/api/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: data.fullName, // Changed from 'name' to 'fullName'
-        email: data.email,
-        password: data.password,
-      }),
-    });
-
-    // Debug log
-    console.log("Response status:", response.status);
-
-    const responseData = await response.json();
-
-    // Debug log
-    console.log("Response data:", responseData);
-
-    if (!response.ok) {
-      throw new Error(responseData.error || "Something went wrong!");
-    }
-
-    //Success flow
-    toast.success("Account created successfully!");
     form.reset();
     onClose();
-    // Optionally redirect to login
-    onLoginClick();
-  } catch (error) {
-    toast.error(
-      error instanceof Error ? error.message : "Something went wrong"
-    );
-    console.error("Registration error:", error);
-  }
-};
+  };
+
+  const onSubmit = async (data: RegisterFormValues) => {
+    try {
+      toast.loading("Creating your account...");
+
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+          name: data.fullName,
+          password: data.password,
+        }),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(responseData.error || "Something went wrong!");
+      }
+
+      toast.success("Account created successfully!");
+      form.reset();
+      onClose();
+      onLoginClick();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create account"
+      );
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
