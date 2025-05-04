@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   description: "A hotel booking app built with Next.js",
 };
 
+// Create a new client component for auth provider
+import AuthProvider from "@/providers/AuthProvider";
+
 export default function RootLayout({
   children,
 }: {
@@ -22,11 +25,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={geist.className}>
-        <ClientOnly>
-          <Navbar />
-        </ClientOnly>
-        <main className="px-4 md:px-8 lg:px-10">{children}</main>
-        <Toaster />
+        <AuthProvider>
+          <ClientOnly>
+            <Navbar />
+          </ClientOnly>
+          <main className="px-4 md:px-8 lg:px-10">{children}</main>
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

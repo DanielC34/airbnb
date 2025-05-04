@@ -52,26 +52,57 @@ export default function RegisterModal({
     onClose(); //Close the modal
   };
 
-  const onSubmit = async (data: RegisterFormValues) => {
-    try {
-      // Show loading toast while processing
-      toast.loading("Creating your account...");
+const onSubmit = async (data: RegisterFormValues) => {
+  try {
+    toast.loading("Creating your account...");
 
-      // Simulate API call (replace with your actual registration logic)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Log what we're sending
+    console.log("Sending data:", {
+      fullName: data.fullName, // Make sure this matches your schema
+      email: data.email,
+      password: data.password,
+    });
 
-      // Success toast
-      toast.success("Account created successfully!");
-      console.log("Form data:", data); // Replace with your registration logic
-      form.reset();
-      onClose();
-    } catch (error) {
-      // Error toast
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create account"
-      );
+    // Debug log
+    console.log("Form data:", data);
+
+    const response = await fetch("/api/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: data.fullName, // Changed from 'name' to 'fullName'
+        email: data.email,
+        password: data.password,
+      }),
+    });
+
+    // Debug log
+    console.log("Response status:", response.status);
+
+    const responseData = await response.json();
+
+    // Debug log
+    console.log("Response data:", responseData);
+
+    if (!response.ok) {
+      throw new Error(responseData.error || "Something went wrong!");
     }
-  };
+
+    //Success flow
+    toast.success("Account created successfully!");
+    form.reset();
+    onClose();
+    // Optionally redirect to login
+    onLoginClick();
+  } catch (error) {
+    toast.error(
+      error instanceof Error ? error.message : "Something went wrong"
+    );
+    console.error("Registration error:", error);
+  }
+};
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>

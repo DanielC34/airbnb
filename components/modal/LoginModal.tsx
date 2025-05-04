@@ -21,7 +21,6 @@ import {
 import { signIn } from "next-auth/react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import GoogleSignInButton from "@/components/GoogleSignInButton/GoogleSignInButton";
 import GithubSignInButton from "@/components/GithubSignInButton/GithubSignInButton";
 
@@ -36,8 +35,7 @@ export default function LoginModal({
   onClose,
   onRegisterClick,
 }: LoginModalProps) {
-  const router = useRouter(); // Initialize the router for navigation
-  // Initialize the form using react-hook-form and zod for validation
+  // No longer need router since we're using window.location.href
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -46,50 +44,35 @@ export default function LoginModal({
     },
   });
 
-  // Add this function to handle modal closing
   const handleClose = () => {
-    form.reset(); //Reset form state
-    onClose(); //Close the modal
+    form.reset();
+    onClose();
   };
 
-  //When someone tries to login
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      // Show loading toast while processing
       toast.loading("Logging you in...");
 
-      // Try to log in using NextAuth
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
-        redirect: false, //Prevent automatic redirect
+        redirect: false,
       });
 
-      // Dismiss loading toast
       toast.dismiss();
 
-      // If something went wrong
       if (result?.error) {
         toast.error("Invalid email or password");
         return;
       }
 
-      // If login worked!
-      // toast.success("Welcome back!");
-      // form.reset();
-      // onClose();
-
-      // // Simulate API call (replace with your actual login logic)
-      // await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Successful login toast
-      toast.success("Welcome Back!!");
-      // console.log("Form data:", data); // Replace with your login logic
+      toast.success("Welcome Back!");
       form.reset();
       onClose();
-      router.refresh(); // Refresh the page to update UI with new session
+      
+      // Force a hard refresh to ensure session is updated
+      window.location.href = "/";
     } catch (error) {
-      // Error toast
       toast.error("Something went wrong");
       console.error("Login error:", error);
     }
@@ -149,31 +132,31 @@ export default function LoginModal({
           </form>
         </Form>
 
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
           </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
+        </div>
         <GoogleSignInButton />
         <GithubSignInButton />
-          <div className="mt-4 text-center text-sm text-gray-500">
-            Don&apos;t have an account?{" "}
-            <Button
-              onClick={() => {
-                onClose();
-                onRegisterClick();
-              }}
-              variant="link"
-              className="text-rose-600 hover:text-rose-700 p-0"
-            >
-              Register here
-            </Button>
-          </div>
+        <div className="mt-4 text-center text-sm text-gray-500">
+          Don&apos;t have an account?{" "}
+          <Button
+            onClick={() => {
+              onClose();
+              onRegisterClick();
+            }}
+            variant="link"
+            className="text-rose-600 hover:text-rose-700 p-0"
+          >
+            Register here
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -2,7 +2,10 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, type LoginFormValues } from "@/lib/validations/auth";
+import {
+  registerSchema,
+  type RegisterFormValues,
+} from "@/lib/validations/auth";
 import {
   Dialog,
   DialogContent,
@@ -18,80 +21,66 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { signIn } from "next-auth/react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import GoogleSignInButton from "@/components/GoogleSignInButton/GoogleSignInButton";
 import GithubSignInButton from "@/components/GithubSignInButton/GithubSignInButton";
 
-interface LoginModalProps {
+interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onRegisterClick: () => void;
+  onLoginClick: () => void;
 }
 
-export default function LoginModal({
+export default function RegisterModal({
   isOpen,
   onClose,
-  onRegisterClick,
-}: LoginModalProps) {
-  const router = useRouter(); // Initialize the router for navigation
-  // Initialize the form using react-hook-form and zod for validation
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  onLoginClick,
+}: RegisterModalProps) {
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
+      fullName: "",
       email: "",
       password: "",
     },
   });
 
-  // Add this function to handle modal closing
   const handleClose = () => {
-    form.reset(); //Reset form state
-    onClose(); //Close the modal
+    form.reset();
+    onClose();
   };
 
-  //When someone tries to login
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: RegisterFormValues) => {
     try {
-      // Show loading toast while processing
-      toast.loading("Logging you in...");
+      toast.loading("Creating your account...");
 
-      // Try to log in using NextAuth
-      const result = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false, //Prevent automatic redirect
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+          name: data.fullName,
+          password: data.password,
+        }),
       });
 
-      // Dismiss loading toast
-      toast.dismiss();
+      const responseData = await response.json();
 
-      // If something went wrong
-      if (result?.error) {
-        toast.error("Invalid email or password");
-        return;
+      if (!response.ok) {
+        throw new Error(responseData.error || "Something went wrong!");
       }
 
-      // If login worked!
-      // toast.success("Welcome back!");
-      // form.reset();
-      // onClose();
-
-      // // Simulate API call (replace with your actual login logic)
-      // await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Successful login toast
-      toast.success("Welcome Back!!");
-      // console.log("Form data:", data); // Replace with your login logic
+      toast.success("Account created successfully!");
       form.reset();
       onClose();
-      router.refresh(); // Refresh the page to update UI with new session
+      onLoginClick();
     } catch (error) {
-      // Error toast
-      toast.error("Something went wrong");
-      console.error("Login error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create account"
+      );
     }
   };
 
@@ -100,11 +89,24 @@ export default function LoginModal({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="text-center">
           <DialogTitle className="text-xl font-semibold">
-            Login to your account
+            Create an account
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="email"
@@ -144,36 +146,38 @@ export default function LoginModal({
               className="w-full bg-rose-600 hover:bg-rose-700"
               disabled={form.formState.isSubmitting}
             >
-              {form.formState.isSubmitting ? "Logging in..." : "Continue"}
+              {form.formState.isSubmitting ? "Creating account..." : "Continue"}
             </Button>
           </form>
         </Form>
 
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
           </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
+        </div>
+
         <GoogleSignInButton />
         <GithubSignInButton />
-          <div className="mt-4 text-center text-sm text-gray-500">
-            Don&apos;t have an account?{" "}
-            <Button
-              onClick={() => {
-                onClose();
-                onRegisterClick();
-              }}
-              variant="link"
-              className="text-rose-600 hover:text-rose-700 p-0"
-            >
-              Register here
-            </Button>
-          </div>
+
+        <div className="mt-4 text-center text-sm text-gray-500">
+          Already have an account?{" "}
+          <Button
+            onClick={() => {
+              onClose();
+              onLoginClick();
+            }}
+            variant="link"
+            className="text-rose-600 hover:text-rose-700 p-0"
+          >
+            Log in
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
